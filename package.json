@@ -5,7 +5,8 @@
   "description": "A sample Apache Cordova application that responds to the deviceready event.",
   "main": "index.js",
   "scripts": {
-    "start": "cordova emulate android",
+    "start": "cordova run android --device",
+    "emulate": "cordova emulate android",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
