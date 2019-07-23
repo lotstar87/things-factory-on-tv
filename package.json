@@ -18,6 +18,7 @@
     "@red-mobile/cordova-plugin-background-mode": "^0.7.2",
     "cordova-android": "^8.0.0",
     "cordova-browser": "^6.0.0",
+    "cordova-electron": "^1.1.0",
     "cordova-ios": "^5.0.1",
     "cordova-plugin-add-swift-support": "^2.0.1",
     "cordova-plugin-autostart": "^2.3.0",
@@ -42,7 +43,8 @@
     "platforms": [
       "browser",
       "ios",
-      "android"
+      "android",
+      "electron"
     ]
   }
 }

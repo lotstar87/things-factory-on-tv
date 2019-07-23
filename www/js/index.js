@@ -148,9 +148,10 @@ var app = {
 
           if (service.port == 1008 && service.txtRecord) {
             var data = service.txtRecord
-            if (data.url && data.token) {
+            var { ta, tb, tc, url } = data
+            if (ta && tb && tc && url) {
               cordova.InAppBrowser.open(
-                `https://deadpool.hatiolab.com${data.url}?token=${data.token}`,
+                `http://192.168.1.27:3000${url}?token=${ta}.${tb}.${tc}`,
                 '_self',
                 'location=no,zoom=no'
               )
