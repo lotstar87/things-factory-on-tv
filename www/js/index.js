@@ -31,16 +31,11 @@ var app = {
   // Bind any cordova events here. Common events are:
   // 'pause', 'resume', etc.
   onDeviceReady: function() {
-    this.receivedEvent('deviceready')
-
     cordova.plugins.autoStart.enable()
     cordova.plugins.backgroundMode.enable()
     cordova.plugins.backgroundMode.excludeFromTaskList()
 
     window.open = cordova.InAppBrowser.open
-
-    var parentElement = document.getElementById('m-dns')
-    var ipAddressElement = parentElement.querySelector('.ip-address')
 
     this.zeroconf = cordova.plugins.zeroconf
 
@@ -49,8 +44,6 @@ var app = {
 
     networkinterface.getWiFiIPAddress(
       ipInformation => {
-        ipAddressElement.textContent = ipInformation.ip
-
         this.zeroconf.register(
           '_thingsfactory._tcp.',
           'local.',
@@ -68,7 +61,6 @@ var app = {
         )
       },
       () => {
-        ipAddressElement.textContent = 'No WIFI'
         this.zeroconf.stop()
       }
     )
@@ -108,16 +100,6 @@ var app = {
   },
 
   // Update DOM on a Received Event
-  receivedEvent: function(id) {
-    var parentElement = document.getElementById(id)
-    var listeningElement = parentElement.querySelector('.listening')
-    var receivedElement = parentElement.querySelector('.received')
-
-    listeningElement.setAttribute('style', 'display:none;')
-    receivedElement.setAttribute('style', 'display:block;')
-
-    console.log('Received Event: ' + id)
-  },
 
   startWatch: function(ipAddress) {
     // watch for services of a specified type
@@ -127,20 +109,9 @@ var app = {
       result => {
         var action = result.action
         var service = result.service
+        console.log(action, JSON.stringify(service, null, '\n'))
         if (action == 'added') {
-          var parentElement = document.getElementById('m-dns')
-          var statusElement = parentElement.querySelector('.status')
-          statusElement.textContent = action
-          var serviceInfoElement = parentElement.querySelector('.service-info')
-          serviceInfoElement.textContent = JSON.stringify(service, null, '\n')
         } else if (action == 'resolved') {
-          var parentElement = document.getElementById('m-dns')
-          var statusElement = parentElement.querySelector('.status')
-          statusElement.textContent = action
-          var serviceInfoElement = parentElement.querySelector('.service-info')
-          serviceInfoElement.textContent = JSON.stringify(service, null, '\n')
-          console.log('service resolved', service)
-
           if (service.port == 1008 && service.txtRecord) {
             var data = service.txtRecord
             var { ta, tb, tc, url } = data
@@ -157,11 +128,17 @@ var app = {
             if (ta && tb && tc && url) {
               var urlObj = new URL(url)
               urlObj.searchParams.append('token', `${ta}.${tb}.${tc}`)
-              this.iab = cordova.InAppBrowser.open(
-                urlObj.toString(),
-                '_self',
-                'location=no,zoom=no'
-              )
+              if (this.iab) {
+                this.iab.executeScript({
+                  code: `window.location.href = "${urlObj.toString()}"`
+                })
+              } else {
+                this.iab = cordova.InAppBrowser.open(
+                  urlObj.toString(),
+                  '_self',
+                  'location=no,zoom=no'
+                )
+              }
 
               this.lastServiceData = { ta, tb, tc, url }
             }
@@ -178,12 +155,6 @@ var app = {
             'foo' : 'bar'
         } */
         } else {
-          var parentElement = document.getElementById('m-dns')
-          var statusElement = parentElement.querySelector('.status')
-          statusElement.textContent = action
-          var serviceInfoElement = parentElement.querySelector('.service-info')
-          serviceInfoElement.textContent = JSON.stringify(service, null, '\n')
-          console.log('service removed', service)
         }
       }
     )
