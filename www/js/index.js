@@ -133,11 +133,6 @@ var app = {
           statusElement.textContent = action
           var serviceInfoElement = parentElement.querySelector('.service-info')
           serviceInfoElement.textContent = JSON.stringify(service, null, '\n')
-          // if (service.port == 1008) {
-          //   var serviceInfoElement = parentElement.querySelector('.service-info')
-          //   serviceInfoElement.textContent = JSON.stringify(service, null, '\n')
-          // }
-          console.log('service added', service)
         } else if (action == 'resolved') {
           var parentElement = document.getElementById('m-dns')
           var statusElement = parentElement.querySelector('.status')
@@ -149,12 +144,26 @@ var app = {
           if (service.port == 1008 && service.txtRecord) {
             var data = service.txtRecord
             var { ta, tb, tc, url } = data
+
+            if (
+              this.lastServiceData &&
+              ta == this.lastServiceData.ta &&
+              tb == this.lastServiceData.tb &&
+              tc == this.lastServiceData.tc &&
+              url == this.lastServiceData.url
+            )
+              return
+
             if (ta && tb && tc && url) {
-              cordova.InAppBrowser.open(
-                `http://192.168.1.27:3000${url}?token=${ta}.${tb}.${tc}`,
+              var urlObj = new URL(url)
+              urlObj.searchParams.append('token', `${ta}.${tb}.${tc}`)
+              this.iab = cordova.InAppBrowser.open(
+                urlObj.toString(),
                 '_self',
                 'location=no,zoom=no'
               )
+
+              this.lastServiceData = { ta, tb, tc, url }
             }
           }
           /* service : {
