@@ -128,6 +128,7 @@ var app = {
             if (ta && tb && tc && url) {
               var urlObj = new URL(url)
               urlObj.searchParams.append('token', `${ta}.${tb}.${tc}`)
+              urlObj.searchParams.append('fullbleed', 'Y')
               if (this.iab) {
                 this.iab.executeScript({
                   code: `window.location.href = "${urlObj.toString()}"`
