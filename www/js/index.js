@@ -39,8 +39,8 @@ var app = {
 
     this.zeroconf = cordova.plugins.zeroconf
 
-    this.zeroconf.registerAddressFamily = 'ipv4' // or 'ipv6' ('any' by default)
-    this.zeroconf.watchAddressFamily = 'ipv4' // or 'ipv6' ('any' by default)
+    // this.zeroconf.registerAddressFamily = 'ipv4' // or 'ipv6' ('any' by default)
+    // this.zeroconf.watchAddressFamily = 'ipv4' // or 'ipv6' ('any' by default)
 
     networkinterface.getWiFiIPAddress(
       ipInformation => {
