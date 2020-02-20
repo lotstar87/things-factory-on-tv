@@ -35,6 +35,8 @@ var app = {
     cordova.plugins.backgroundMode.enable()
     cordova.plugins.backgroundMode.excludeFromTaskList()
 
+    this.initializeWebserver()
+
     window.open = cordova.InAppBrowser.open
 
     this.zeroconf = cordova.plugins.zeroconf
@@ -55,8 +57,6 @@ var app = {
           },
           result => {
             console.log('Service registered', result.service)
-
-            this.startWatch(ipInformation.ip)
           }
         )
       },
@@ -64,101 +64,59 @@ var app = {
         this.zeroconf.stop()
       }
     )
-
-    // this.zeroconf.registerAddressFamily = 'ipv4' // or 'ipv6' ('any' by default)
-    // this.zeroconf.watchAddressFamily = 'ipv4' // or 'ipv6' ('any' by default)
-
-    // // watch for services of a specified type
-    // this.zeroconf.watch('_thingsfactory._tcp.', 'local.', result => {
-    //   var action = result.action
-    //   var service = result.service
-    //   if (action == 'added') {
-    //     console.log('service added', service)
-    //   } else if (action == 'resolved') {
-    //     console.log('service resolved', service)
-    //     /* service : {
-    //     'domain' : 'local.',
-    //     'type' : '_http._tcp.',
-    //     'name': 'Becvert\'s iPad',
-    //     'port' : 80,
-    //     'hostname' : 'ipad-of-becvert.local',
-    //     'ipv4Addresses' : [ '192.168.1.125' ],
-    //     'ipv6Addresses' : [ '2001:0:5ef5:79fb:10cb:1dbf:3f57:feb0' ],
-    //     'txtRecord' : {
-    //         'foo' : 'bar'
-    //     } */
-    //   } else {
-    //     console.log('service removed', service)
-    //   }
-    // })
-
-    // publish a zeroconf service of your own
-    // this.zeroconf.register(
-
-    // unregister your service
-    // this.zeroconf.unregister('_http._tcp.', 'local.', "Becvert's iPad")
   },
 
-  // Update DOM on a Received Event
+  initializeWebserver: function() {
+    webserver.onRequest(request => {
+      var path = request.path
+      switch (path) {
+        case '/screencast':
+          var body = JSON.parse(request.body)
+          var { access_token, url } = body
 
-  startWatch: function(ipAddress) {
-    // watch for services of a specified type
-    this.zeroconf.watch(
-      `_${ipAddress.replace(/\./g, '')}._udp.`,
-      'local.',
-      result => {
-        var action = result.action
-        var service = result.service
-        console.log(action, JSON.stringify(service, null, '\n'))
-        if (action == 'added') {
-        } else if (action == 'resolved') {
-          if (service.port == 1008 && service.txtRecord) {
-            var data = service.txtRecord
-            var { ta, tb, tc, url } = data
+          if (access_token && url) {
+            var urlObj = new URL(url)
+            urlObj.searchParams.append('token', access_token)
+            urlObj.searchParams.append('fullbleed', 'Y')
+            this.openIAB(urlObj.toString())
 
-            if (
-              this.lastServiceData &&
-              ta == this.lastServiceData.ta &&
-              tb == this.lastServiceData.tb &&
-              tc == this.lastServiceData.tc &&
-              url == this.lastServiceData.url
-            )
-              return
-
-            if (ta && tb && tc && url) {
-              var urlObj = new URL(url)
-              urlObj.searchParams.append('token', `${ta}.${tb}.${tc}`)
-              urlObj.searchParams.append('fullbleed', 'Y')
-              if (this.iab) {
-                this.iab.executeScript({
-                  code: `window.location.href = "${urlObj.toString()}"`
-                })
-              } else {
-                this.iab = cordova.InAppBrowser.open(
-                  urlObj.toString(),
-                  '_self',
-                  'location=no,zoom=no'
-                )
-              }
-
-              this.lastServiceData = { ta, tb, tc, url }
-            }
+            this.lastServiceData = { access_token, url }
           }
-          /* service : {
-        'domain' : 'local.',
-        'type' : '_http._tcp.',
-        'name': 'Becvert\'s iPad',
-        'port' : 80,
-        'hostname' : 'ipad-of-becvert.local',
-        'ipv4Addresses' : [ '192.168.1.125' ],
-        'ipv6Addresses' : [ '2001:0:5ef5:79fb:10cb:1dbf:3f57:feb0' ],
-        'txtRecord' : {
-            'foo' : 'bar'
-        } */
-        } else {
+
+          break
+      }
+
+      webserver.sendResponse(request.requestId, {
+        status: 200,
+        body: JSON.stringify({
+          success: true
+        }),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    })
+
+    webserver.start()
+  },
+
+  openIAB: function(url) {
+    if (this.iab) {
+      this.iab.executeScript({
+        code: `window.location.href = "${url}"`
+      })
+    } else {
+      this.onExit = () => {
+        if (this.iab) {
+          this.iab.removeEventListener('exit', this.onExit)
+          this.iab = null
+          this.onExit = null
         }
       }
-    )
+
+      this.iab = cordova.InAppBrowser.open(url, '_self', 'location=no,zoom=no')
+      this.iab.addEventListener('exit', this.onExit)
+    }
   }
 }
 

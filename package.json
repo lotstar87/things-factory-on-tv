@@ -25,6 +25,7 @@
     "cordova-plugin-device": "^2.0.3",
     "cordova-plugin-inappbrowser": "^3.1.0",
     "cordova-plugin-networkinterface": "^2.0.0",
+    "cordova-plugin-webserver": "git+https://github.com/bykof/cordova-plugin-webserver.git",
     "cordova-plugin-zeroconf": "^1.4.0"
   },
   "devDependencies": {
@@ -38,13 +39,11 @@
       "cordova-plugin-background-mode": {},
       "cordova-plugin-networkinterface": {},
       "cordova-plugin-inappbrowser": {},
-      "cordova-plugin-device": {}
+      "cordova-plugin-device": {},
+      "cordova-plugin-webserver": {}
     },
     "platforms": [
-      "browser",
-      "ios",
-      "android",
-      "electron"
+      "android"
     ]
   }
 }
